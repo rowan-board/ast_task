@@ -45,67 +45,112 @@ let state = {
     stages_passed: null
 };
 
+let memory = {
+    S: [],
+}
+
 function initalise_task(){
     state.current_dimension = flip()
-    state.stage = 0
+    state.stage = 1
     state.trial_number = 1
-    setButton()
+    set_stimuli()
 }
 
 function set_stimuli(){
+
+    let s = null;
+    let n = 0;
+    let stim1 = 0;
+
     if (state.stage == 0){
         s = [globals.stimuli[0], globals.stimuli[1]]
-    } else if (state.stage == 1){
-        n = 7
-        stim1 = 2
-    } else if (state.stage == 2){
-        n = 15
-        stim1 = 6
-    } else if (state.stage == 3){
-        n = 23
-        stim1 = 10
-    } else if (state.stage == 4){
-        n = 31
-        stim1 = 14
-    } else if (state.stage == 5){
-        n = 39
-        stim1 = 18
-    } else if (state.stage in [6,7]){
-        n = 47
-        stim1 = 22
+    } else {
+        if (state.stage == 1){
+            n = 7
+            stim1 = 2
+        } else if (state.stage == 2){
+            n = 15
+            stim1 = 6
+        } else if (state.stage == 3){
+            n = 23
+            stim1 = 10
+        } else if (state.stage == 4){
+            n = 31
+            stim1 = 14
+        } else if (state.stage == 5){
+            n = 39
+            stim1 = 18
+        } else if (state.stage in [6,7]){
+            n = 47
+            stim1 = 22
+        }
+
+        // get flat list of stimuli from previous 3 and 6 trials
+        let prev_3 = memory.S.slice(-3).flat();
+        let prev_6 = memory.S.slice(-6).flat();
+
+        let rep = 0;
+
+        for (let i = stim1; i < stim1 + 2; i++) {
+            let x = globals.stimuli[i];
+
+            let countPrev3 = prev_3.filter(stim => stim === x).length;
+            let countPrev6 = prev_6.filter(stim => stim === x).length;
+
+            if (countPrev3 >= 3 || countPrev6 >= 4) {
+                rep = 1;
+
+                let stimremain = globals.stimuli.slice(stim1, stim1 + 4).filter(stim => {
+                    return stim !== x && stim !== globals.stimuli[globals.stimuli.length - 1 - globals.stimuli.indexOf(x)];
+                });
+
+                s[0] = stimremain[Math.floor(Math.random() * stimremain.length)];
+                s[1] = globals.stimuli[globals.stimuli.length - 1 - globals.stimuli.indexOf(s[0])];
+                break;
+            }
+        }
+
+        if (rep == 0){
+            let tmp_stim = globals.stimuli.slice(stim1, stim1+4);
+            console.log(tmp_stim[Math.floor(Math.random() * tmp_stim.length)]);
+            s[0] = tmp_stim[Math.floor(Math.random() * tmp_stim.length)];
+            s[1] = globals.stimuli[n - globals.stimuli.indexOf(s[0])];
+        }
     }
 
-    // get flat list of stimuli from previous 3 and 6 trials
-    let prev_3 = S.slice(-3).flat();
-    let prev_6 = S.slice(-6).flat();
+    // save stimuli
+    memory.S.push(s)
+    state.S = s
+    set_button();
 }
 
 // Function to get the shape and pattern for this trial
-function setButton() {
+function set_button() {
     // check the state
-    if (state.stage == 1){
+    if (state.stage == 0){
         if (state.current_dimension == 0){
             // shape state
-            state.shape_1 = globals.shapes[globals.stimuli[0]]
-            state.shape_2 = globals.shapes[globals.stimuli[1]]
+            state.shape_1 = globals.shapes[state.S[0]]
+            state.shape_2 = globals.shapes[state.S[1]]
+            // set stimulus in button dynamically 
             $('#dynamicButton').css('background-image',`url('${state.shape_1}')`);
             $('#dynamicButton_2').css('background-image',`url('${state.shape_2}')`);
         } else {
-            state.line_1 = globals.lines[globals.stimuli[0]]
-            state.line_2 = globals.lines[globals.stimuli[1]]
+            // line state
+            state.line_1 = globals.lines[state.S[0]]
+            state.line_2 = globals.lines[state.S[1]]
             $('#dynamicButton').css('background-image',`url('${state.line_1}')`);
             $('#dynamicButton_2').css('background-image',`url('${state.line_2}')`);
         }
     } else {
-
-
+        // now do this for all states after simple discrimination, we have compound stimuli now
+        state.shape_1 = globals.shapes[state.S[0][0]]
+        state.shape_2 = globals.shapes[state.S[1][0]]
+        state.line_1 = globals.lines[state.S[0][1]]
+        state.line_2 = globals.lines[state.S[1][1]]    
+        $('#dynamicButton').css('background-image',`url('${state.shape_1}'), url('${state.line_1}')`);
+        $('#dynamicButton_2').css('background-image',`url('${state.shape_2}'), url('${state.line_2}')`);
     }
-
-
-
-    // Set the background images dynamically
-    //button.style.backgroundImage = `url('${globals.shapes[shapeIndex]}'), url('${globals.patterns[patternIndex]}')`;
-    //button_2.style.backgroundImage = `url('${globals.shapes[shapeIndex_2]}'), url('${globals.patterns[patternIndex_2]}')`;
 }
 
 // Call the function when the page loads

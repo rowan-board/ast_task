@@ -2,6 +2,14 @@
 // Helper functions used in multiple experiments
 "use strict";
 
+function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1)); // pick a random index
+      [array[i], array[j]] = [array[j], array[i]]; // swap
+    }
+    return array;
+  }
+
 function Pass(){
     // Do nothing
 }

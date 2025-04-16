@@ -10,11 +10,11 @@ let globals = {
         'stimuli/shapes/shape_07.png', 'stimuli/shapes/shape_08.png', 'stimuli/shapes/shape_09.png',
         'stimuli/shapes/shape_10.png', 'stimuli/shapes/shape_11.png', 'stimuli/shapes/shape_12.png'
     ]),
-    lines: shuffleArray([
-        'stimuli/lines/line_pattern_01.png', 'stimuli/lines/line_pattern_02.png', 'stimuli/lines/line_pattern_03.png',
-        'stimuli/lines/line_pattern_04.png', 'stimuli/lines/line_pattern_05.png', 'stimuli/lines/line_pattern_06.png',
-        'stimuli/lines/line_pattern_07.png', 'stimuli/lines/line_pattern_08.png', 'stimuli/lines/line_pattern_09.png',
-        'stimuli/lines/line_pattern_10.png', 'stimuli/lines/line_pattern_11.png', 'stimuli/lines/line_pattern_12.png'
+    sounds: shuffleArray([
+        'stimuli/auditory/tone_01.wav', 'stimuli/auditory/tone_02.wav', 'stimuli/auditory/tone_03.wav',
+        'stimuli/auditory/tone_04.wav', 'stimuli/auditory/tone_05.wav', 'stimuli/auditory/tone_06.wav',
+        'stimuli/auditory/tone_07.wav', 'stimuli/auditory/tone_08.wav', 'stimuli/auditory/tone_09.wav',
+        'stimuli/auditory/tone_10.wav', 'stimuli/auditory/tone_11.wav', 'stimuli/auditory/tone_12.wav'
     ]),
     stimuli:[[0], [1],
             [0,0], [1,0], [0,1], [1,1],
@@ -38,8 +38,8 @@ let state = {
     target_feature: null,
     shape_1: null,
     shape_2: null,
-    line_1: null,
-    line_2: null,
+    sound_1: null,
+    sound_2: null,
     choice: [],
     reward: null,
     S: null,
@@ -80,7 +80,7 @@ function start_trial(){
     if (state.current_dimension == 0){
         state.target_feature = globals.shapes[globals.target_feature[state.stage]];
     } else {
-        state.target_feature = globals.lines[globals.target_feature[state.stage]];
+        state.target_feature = globals.sounds[globals.target_feature[state.stage]];
     }
     set_stimuli();
 }
@@ -166,20 +166,54 @@ function set_button() {
             $('#dynamicButton').css('background-image',`url('${state.shape_1}')`);
             $('#dynamicButton_2').css('background-image',`url('${state.shape_2}')`);
         } else {
-            // line state
-            state.line_1 = globals.lines[state.S[0]];
-            state.line_2 = globals.lines[state.S[1]];
-            $('#dynamicButton').css('background-image',`url('${state.line_1}')`);
-            $('#dynamicButton_2').css('background-image',`url('${state.line_2}')`);
+            // sound state
+            state.sound_1 = globals.sounds[state.S[0]]; // Store the file path
+            state.sound_2 = globals.sounds[state.S[1]]; // Store the file path
+            
+            // need matching shape for stimulus
+            state.shape_1 = globals.shapes[state.S[0]];
+            state.shape_2 = globals.shapes[state.S[0]];
+
+            // give the button the same shape
+            $('#dynamicButton').css('background-image', `url('${state.shape_1}')`);
+            $('#dynamicButton_2').css('background-image', `url('${state.shape_2}')`);
+
+            // Attach hover sound events
+            $('#dynamicButton').off('mouseenter').on('mouseenter', () => {
+                let sound1 = new Audio(state.sound_1);  // Create the Audio object on hover
+                sound1.currentTime = 0;
+                sound1.play();
+            });
+
+            $('#dynamicButton_2').off('mouseenter').on('mouseenter', () => {
+                let sound2 = new Audio(state.sound_2);  // Create the Audio object on hover
+                sound2.currentTime = 0;  // Rewind the audio
+                sound2.play();           // Play the sound
+            });
         }
     } else {
         // now do this for all states after simple discrimination, we have compound stimuli now
         state.shape_1 = globals.shapes[state.S[0][0]];
         state.shape_2 = globals.shapes[state.S[1][0]];
-        state.line_1 = globals.lines[state.S[0][1]];
-        state.line_2 = globals.lines[state.S[1][1]];   
-        $('#dynamicButton').css('background-image',`url('${state.shape_1}'), url('${state.line_1}')`);
-        $('#dynamicButton_2').css('background-image',`url('${state.shape_2}'), url('${state.line_2}')`);
+        state.sound_1 = globals.sounds[state.S[0][1]]; // Store the file path
+        state.sound_2 = globals.sounds[state.S[1][1]]; // Store the file path
+
+        // Only show shape images
+        $('#dynamicButton').css('background-image', `url('${state.shape_1}')`);
+        $('#dynamicButton_2').css('background-image', `url('${state.shape_2}')`);
+
+        // Attach hover sound events
+        $('#dynamicButton').off('mouseenter').on('mouseenter', () => {
+            let sound1 = new Audio(state.sound_1);  // Create the Audio object on hover
+            sound1.currentTime = 0;
+            sound1.play();
+        });
+
+        $('#dynamicButton_2').off('mouseenter').on('mouseenter', () => {
+            let sound2 = new Audio(state.sound_2);  // Create the Audio object on hover
+            sound2.currentTime = 0;  // Rewind the audio
+            sound2.play();           // Play the sound
+        });
     }
 
     // Randomize which button goes on the left
@@ -202,9 +236,9 @@ function get_response(e){
     // Which button was clicked?
     let btn = $(e.target)[0].id;
     if (btn == 'dynamicButton'){
-        state.choice = [state.shape_1, state.line_1];
+        state.choice = [state.shape_1, state.sound_1];
     } else {
-        state.choice = [state.shape_2, state.line_2];
+        state.choice = [state.shape_2, state.sound_2];
     }
 
     console.log(state.choice);
